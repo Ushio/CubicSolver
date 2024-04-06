@@ -51,20 +51,32 @@ float search_range( float lBound, float rBound, int iterations, float a, float b
     for (int i = 0; i < iterations; i++)
     {
         float Y = cubic(x, a, b, c, d);
-        float xn = x - Y / quadratic(x, aD, bD, cD);
+        float dx = -Y / quadratic(x, aD, bD, cD);
+        float xn = x + dx;
 
         if (xn < lBound)
         {
+            rBound = x;
             x = (lBound + x) * 0.5f;
         }
         else if (rBound < xn)
         {
+            lBound = x;
             x = (x + rBound) * 0.5f;
         }
         else
         {
+            if( 0.0f < dx )
+            {
+                lBound = x;
+            }
+            else
+            {
+                rBound = x;
+            }
             x = xn;
         }
+        
     }
     return x;
 }
