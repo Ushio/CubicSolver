@@ -71,6 +71,9 @@ float search_range( float lBound, float rBound, int iterations, float a, float b
 
 int solve_cubic( float xs[2], float xMinCubic, float xMaxCubic, int iterations, float a, float b, float c, float d )
 {
+    // note:
+    // if a is close to 0, one of borders can be far, and need a lot of iterations to converge
+
     float aD = 3.0f * a;
     float bD = 2.0f * b;
     float cD = c;
@@ -81,39 +84,42 @@ int solve_cubic( float xs[2], float xMinCubic, float xMaxCubic, int iterations, 
 
     if( solve_quadratic(borders, aD, bD, cD) )
     {
-        // center area is valid regardless xMinCubic and xMaxCubic
-        xMinCubic = ss_min(xMinCubic, borders[0]);
-        xMaxCubic = ss_max(xMaxCubic, borders[1]);
-
-        float yL = cubic(xMinCubic, a, b, c, d);
         float y0 = cubic(borders[0], a, b, c, d);
         float y1 = cubic(borders[1], a, b, c, d);
-        float yR = cubic(xMaxCubic, a, b, c, d);
 
-        if (y0 * yL < 0.0f)
+        // Middle
+        // If there are 3 solutions, you don't have to worry about xMinCubic xMaxCubic
+        if( y0 * y1 < 0.0f )
         {
-            float lBound = xMinCubic;
-            float rBound = borders[0];
+            float lBound = borders[0];
+            float rBound = borders[1];
             float x = search_range(lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
             xs[nSolutions++] = x;
-            
+
             float aPrime = a;
             float bPrime = b + x * aPrime;
             float cPrime = c + x * bPrime;
-            if( solve_quadratic(xs + nSolutions, aPrime, bPrime, cPrime) )
+            if (solve_quadratic(xs + nSolutions, aPrime, bPrime, cPrime))
             {
                 return 3;
             }
             return 1;
         }
+        
+        // center area is valid regardless xMinCubic and xMaxCubic
+        xMinCubic = ss_min(xMinCubic, borders[0]);
+        xMaxCubic = ss_max(xMaxCubic, borders[1]);
 
-        if (y0 * y1 < 0.0f)
+        // Left
+        float yL = cubic(xMinCubic, a, b, c, d);
+        if (y0 * yL < 0.0f)
         {
-            float lBound = borders[0];
-            float rBound = borders[1];
+            float lBound = xMinCubic;
+            float rBound = borders[0];
             xs[nSolutions++] = search_range(lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
         }
-
+        // Right
+        float yR = cubic(xMaxCubic, a, b, c, d);
         if (y1 * yR < 0.0f)
         {
             float lBound = borders[1];
