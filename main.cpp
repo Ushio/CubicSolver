@@ -81,6 +81,10 @@ int solve_cubic( float xs[2], float xMinCubic, float xMaxCubic, int iterations, 
 
     if( solve_quadratic(borders, aD, bD, cD) )
     {
+        // center area is valid regardless xMinCubic and xMaxCubic
+        xMinCubic = ss_min(xMinCubic, borders[0]);
+        xMaxCubic = ss_max(xMaxCubic, borders[1]);
+
         float yL = cubic(xMinCubic, a, b, c, d);
         float y0 = cubic(borders[0], a, b, c, d);
         float y1 = cubic(borders[1], a, b, c, d);
