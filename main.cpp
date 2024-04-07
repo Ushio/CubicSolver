@@ -93,8 +93,27 @@ float search_range( float LSign, float lBound, float rBound, int iterations, flo
     return x;
 }
 
-int solve_cubic( float xs[2], float xMinCubic, float xMaxCubic, int iterations, float a, float b, float c, float d )
+int solve_cubic( float xs[3], float xMinCubic, float xMaxCubic, int iterations, float a, float b, float c, float d )
 {
+    if( a == 0.f )
+    {
+        if( b == 0.0f )
+        {
+            if( c == 0.0f )
+            {
+                return 0;
+            }
+            // cx + d = 0 case
+            xs[0] = -d / c;
+            return 1;
+        }
+        if (solve_quadratic(xs, b, c, d))
+        {
+            return 2;
+        }
+        return 0;
+    }
+
     float aD = 3.0f * a;
     float bD = 2.0f * b;
     float cD = c;
