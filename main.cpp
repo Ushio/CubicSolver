@@ -54,49 +54,39 @@ float search_range( float LSign, float lBound, float rBound, int iterations, flo
 {
     float x = (lBound + rBound) * 0.5f;
     float y = cubic( x, a, b, c, d );
-    if( LSign * y < 0.0f )
-    {
-        rBound = x;
-    }
-    else
-    {
-        lBound = x;
-    }
 
     for (int i = 0; i < iterations; i++)
     {
+        if( LSign * y < 0.0f )
+        {
+            rBound = x;
+        }
+        else
+        {
+            lBound = x;
+        }
+
         //pr::DrawLine({ lBound, 0.1f + i * 0.1f, 0 }, { rBound,  0.1f + i * 0.1f, 0 }, {255, 0, 0}, 4);
         //pr::DrawSphere({ x, y, 0 }, 0.05f, { 128, 128, 255 });
 
         float dx = -y / quadratic(x, aD, bD, cD);
         float xn = x + dx;
-        float yn = cubic(xn, a, b, c, d);
 
         //pr::DrawLine({ x, y, 0 }, { xn, 0, 0 }, { 255, 255, 0 }, 2);
 
-        if (xn < lBound)
+        if( xn < lBound || rBound < xn )
         {
-            rBound = x;
-            x = (lBound + x) * 0.5f;
+            //pr::DrawLine({ x, y, 0 }, { xn, 0, 0 }, { 64, 64, 0 }, 1);
+            xn = ( lBound + rBound ) * 0.5f;
+            //pr::DrawLine({ x, y, 0 }, { xn, 0, 0 }, { 255, 255, 0 }, 2);
         }
-        else if (rBound < xn)
-        {
-            lBound = x;
-            x = (x + rBound) * 0.5f;
-        }
-        else
-        {
-            if( LSign * yn < 0.0f )
-            {
-                rBound = xn;
-            }
-            else
-            {
-                lBound = xn;
-            }
-            x = xn;
-        }
-        y = yn;
+        //else
+        //{
+        //    pr::DrawLine({ x, y, 0 }, { xn, 0, 0 }, { 255, 255, 0 }, 2);
+        //}
+
+        y = cubic(xn, a, b, c, d);
+        x = xn;
     }
     return x;
 }
