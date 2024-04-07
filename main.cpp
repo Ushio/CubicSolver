@@ -24,14 +24,23 @@ float sign_of(float x)
 }
 
 // ax^2 + bx + c == 0
-bool solve_quadratic( float xs[2], float a, float b, float c)
+int solve_quadratic( float xs[2], float a, float b, float c)
 {
-    float s = 0.0f < b ? 1.0f : -1.0f;
+    // bx + c = 0 case
+    if( a == 0.0f )
+    {
+        if( b == 0.0f )
+        {
+            return 0;
+        }
+        xs[0] = -c / b;
+        return 1;
+    }
 
     float det = b * b - 4.0f * a * c;
     if( det < 0.0f )
     {
-        return false;
+        return 0;
     }
 
     float k = (-b - sign_of(b) * std::sqrtf(det)) / 2.0f;
@@ -39,7 +48,7 @@ bool solve_quadratic( float xs[2], float a, float b, float c)
     float x1 = c / k;
     xs[0] = ss_min( x0, x1 );
     xs[1] = ss_max( x0, x1 );
-    return true;
+    return 2;
 }
 float quadratic(float x, float a, float b, float c) {
     return x * x * a + x * b + c;
@@ -97,21 +106,7 @@ int solve_cubic( float xs[3], float xMinCubic, float xMaxCubic, int iterations, 
 {
     if( a == 0.f )
     {
-        if( b == 0.0f )
-        {
-            if( c == 0.0f )
-            {
-                return 0;
-            }
-            // cx + d = 0 case
-            xs[0] = -d / c;
-            return 1;
-        }
-        if (solve_quadratic(xs, b, c, d))
-        {
-            return 2;
-        }
-        return 0;
+        return solve_quadratic(xs, b, c, d);
     }
 
     float aD = 3.0f * a;
@@ -122,7 +117,7 @@ int solve_cubic( float xs[3], float xMinCubic, float xMaxCubic, int iterations, 
 
     int nSolutions = 0;
 
-    if( solve_quadratic(borders, aD, bD, cD) )
+    if( solve_quadratic( borders, aD, bD, cD ) ) // aD != 0.0f
     {
         borders[0] = ss_max( borders[0], xMinCubic );
         borders[1] = ss_min( borders[1], xMaxCubic );
@@ -142,7 +137,7 @@ int solve_cubic( float xs[3], float xMinCubic, float xMaxCubic, int iterations, 
             float aPrime = a;
             float bPrime = b + x * aPrime;
             float cPrime = c + x * bPrime;
-            if (solve_quadratic(xs + nSolutions, aPrime, bPrime, cPrime))
+            if( solve_quadratic( xs + nSolutions, aPrime, bPrime, cPrime ) ) // aPrime != 0.0f
             {
                 return 3;
             }
