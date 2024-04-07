@@ -41,18 +41,38 @@ float cubic(float x, float a, float b, float c, float d) {
     return x * x * x * a + x * x * b + x * c + d;
 };
 
+float sign_of(float x)
+{
+    return 0.0f < x ? 1.0f : -1.0f;
+}
+
 // High-Performance Polynomial Root Finding for Graphics
 
 // f (x)= a x^3 + b x^2 + c x + d
 // f'(x)= aD x^2 + bD x + cD
-float search_range( float lBound, float rBound, int iterations, float a, float b, float c, float d, float aD, float bD, float cD )
+float search_range( float LSign, float lBound, float rBound, int iterations, float a, float b, float c, float d, float aD, float bD, float cD )
 {
     float x = (lBound + rBound) * 0.5f;
+    float y = cubic( x, a, b, c, d );
+    if( LSign * y < 0.0f )
+    {
+        rBound = x;
+    }
+    else
+    {
+        lBound = x;
+    }
+
     for (int i = 0; i < iterations; i++)
     {
-        float Y = cubic(x, a, b, c, d);
-        float dx = -Y / quadratic(x, aD, bD, cD);
+        //pr::DrawLine({ lBound, 0.1f + i * 0.1f, 0 }, { rBound,  0.1f + i * 0.1f, 0 }, {255, 0, 0}, 4);
+        //pr::DrawSphere({ x, y, 0 }, 0.05f, { 128, 128, 255 });
+
+        float dx = -y / quadratic(x, aD, bD, cD);
         float xn = x + dx;
+        float yn = cubic(xn, a, b, c, d);
+
+        //pr::DrawLine({ x, y, 0 }, { xn, 0, 0 }, { 255, 255, 0 }, 2);
 
         if (xn < lBound)
         {
@@ -66,17 +86,17 @@ float search_range( float lBound, float rBound, int iterations, float a, float b
         }
         else
         {
-            if( 0.0f < dx )
+            if( LSign * yn < 0.0f )
             {
-                lBound = x;
+                rBound = xn;
             }
             else
             {
-                rBound = x;
+                lBound = xn;
             }
             x = xn;
         }
-        
+        y = yn;
     }
     return x;
 }
@@ -105,7 +125,7 @@ int solve_cubic( float xs[2], float xMinCubic, float xMaxCubic, int iterations, 
         {
             float lBound = borders[0];
             float rBound = borders[1];
-            float x = search_range(lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
+            float x = search_range( sign_of( y0 ), lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
             xs[nSolutions++] = x;
 
             float aPrime = a;
@@ -128,7 +148,7 @@ int solve_cubic( float xs[2], float xMinCubic, float xMaxCubic, int iterations, 
         {
             float lBound = xMinCubic;
             float rBound = borders[0];
-            xs[nSolutions++] = search_range(lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
+            xs[nSolutions++] = search_range(sign_of(yL), lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
         }
         // Right
         float yR = cubic(xMaxCubic, a, b, c, d);
@@ -136,7 +156,7 @@ int solve_cubic( float xs[2], float xMinCubic, float xMaxCubic, int iterations, 
         {
             float lBound = borders[1];
             float rBound = xMaxCubic;
-            xs[nSolutions++] = search_range(lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
+            xs[nSolutions++] = search_range(sign_of(y1), lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
         }
     }
     else
@@ -147,7 +167,7 @@ int solve_cubic( float xs[2], float xMinCubic, float xMaxCubic, int iterations, 
         {
             float lBound = xMinCubic;
             float rBound = xMaxCubic;
-            xs[nSolutions++] = search_range(lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
+            xs[nSolutions++] = search_range(sign_of(yL), lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
         }
     }
     return nSolutions;
