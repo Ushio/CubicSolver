@@ -17,6 +17,12 @@ inline T ss_abs(T x)
 {
     return x < T(0) ? -x : x;
 }
+
+float sign_of(float x)
+{
+    return 0.0f < x ? 1.0f : -1.0f;
+}
+
 // ax^2 + bx + c == 0
 bool solve_quadratic( float xs[2], float a, float b, float c)
 {
@@ -28,10 +34,11 @@ bool solve_quadratic( float xs[2], float a, float b, float c)
         return false;
     }
 
-    float x0 = ( -b - s * std::sqrtf(det) )/ ( 2.0f * a );
-    float x1 = c / (a * x0);
+    float k = (-b - sign_of(b) * std::sqrtf(det)) / 2.0f;
+    float x0 = k / a;
+    float x1 = c / k;
     xs[0] = ss_min( x0, x1 );
-    xs[1] = ss_max(x0, x1);
+    xs[1] = ss_max( x0, x1 );
     return true;
 }
 float quadratic(float x, float a, float b, float c) {
@@ -40,11 +47,6 @@ float quadratic(float x, float a, float b, float c) {
 float cubic(float x, float a, float b, float c, float d) {
     return x * x * x * a + x * x * b + x * c + d;
 };
-
-float sign_of(float x)
-{
-    return 0.0f < x ? 1.0f : -1.0f;
-}
 
 // High-Performance Polynomial Root Finding for Graphics
 
@@ -93,9 +95,6 @@ float search_range( float LSign, float lBound, float rBound, int iterations, flo
 
 int solve_cubic( float xs[2], float xMinCubic, float xMaxCubic, int iterations, float a, float b, float c, float d )
 {
-    // note:
-    // if a is close to 0, one of borders can be far, and need a lot of iterations to converge
-
     float aD = 3.0f * a;
     float bD = 2.0f * b;
     float cD = c;
@@ -106,11 +105,14 @@ int solve_cubic( float xs[2], float xMinCubic, float xMaxCubic, int iterations, 
 
     if( solve_quadratic(borders, aD, bD, cD) )
     {
+        borders[0] = ss_max( borders[0], xMinCubic );
+        borders[1] = ss_min( borders[1], xMaxCubic );
+
         float y0 = cubic(borders[0], a, b, c, d);
         float y1 = cubic(borders[1], a, b, c, d);
 
         // Middle
-        // If there are 3 solutions, you don't have to worry about xMinCubic xMaxCubic
+        // If there are 3 solutions, you don't have to worry about xMinCubic xMaxCubic for reminding 2 roots
         if( y0 * y1 < 0.0f )
         {
             float lBound = borders[0];
@@ -127,10 +129,6 @@ int solve_cubic( float xs[2], float xMinCubic, float xMaxCubic, int iterations, 
             }
             return 1;
         }
-        
-        // center area is valid regardless xMinCubic and xMaxCubic
-        xMinCubic = ss_min(xMinCubic, borders[0]);
-        xMaxCubic = ss_max(xMaxCubic, borders[1]);
 
         // Left
         float yL = cubic(xMinCubic, a, b, c, d);
