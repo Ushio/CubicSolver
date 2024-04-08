@@ -117,8 +117,11 @@ int solve_cubic( float xs[3], float xMinCubic, float xMaxCubic, int iterations, 
 
     if( solve_quadratic( borders, aD, bD, cD ) ) // aD != 0.0f
     {
-        borders[0] = ss_max( borders[0], xMinCubic );
+        // The ranges can be shrunk but fine
+        borders[0] = ss_min( borders[0], xMaxCubic );
         borders[1] = ss_min( borders[1], xMaxCubic );
+        borders[0] = ss_max( borders[0], xMinCubic );
+        borders[1] = ss_max( borders[1], xMinCubic );
 
         float yL = cubic(xMinCubic, a, b, c, d);
         float y0 = cubic(borders[0], a, b, c, d);
