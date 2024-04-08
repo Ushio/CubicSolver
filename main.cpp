@@ -115,51 +115,56 @@ int solve_cubic( float xs[3], float xMinCubic, float xMaxCubic, int iterations, 
 
     float borders[2];
 
-    int nSolutions = 0;
-
     if( solve_quadratic( borders, aD, bD, cD ) ) // aD != 0.0f
     {
         borders[0] = ss_max( borders[0], xMinCubic );
         borders[1] = ss_min( borders[1], xMaxCubic );
 
+        float yL = cubic(xMinCubic, a, b, c, d);
         float y0 = cubic(borders[0], a, b, c, d);
         float y1 = cubic(borders[1], a, b, c, d);
-
-        // Middle
-        // If there are 3 solutions, you don't have to worry about xMinCubic xMaxCubic for reminding 2 roots
-        if( y0 * y1 < 0.0f )
-        {
-            float lBound = borders[0];
-            float rBound = borders[1];
-            float x = search_range( sign_of( y0 ), lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
-            xs[nSolutions++] = x;
-
-            float aPrime = a;
-            float bPrime = b + x * aPrime;
-            float cPrime = c + x * bPrime;
-            if( solve_quadratic( xs + nSolutions, aPrime, bPrime, cPrime ) ) // aPrime != 0.0f
-            {
-                return 3;
-            }
-            return 1;
-        }
-
-        // Left
-        float yL = cubic(xMinCubic, a, b, c, d);
-        if (y0 * yL < 0.0f)
-        {
-            float lBound = xMinCubic;
-            float rBound = borders[0];
-            xs[nSolutions++] = search_range(sign_of(yL), lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
-        }
-        // Right
         float yR = cubic(xMaxCubic, a, b, c, d);
-        if (y1 * yR < 0.0f)
+
+        float sY;
+        float lBound;
+        float rBound;
+
+        if( yL * y0 < 0.0f ) // Left
         {
-            float lBound = borders[1];
-            float rBound = xMaxCubic;
-            xs[nSolutions++] = search_range(sign_of(y1), lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
+            sY = sign_of(yL);
+            lBound = xMinCubic;
+            rBound = borders[0];
         }
+        else if( y0 * y1 < 0.0f ) // middle
+        {
+            sY = sign_of(y0);
+            lBound = borders[0];
+            rBound = borders[1];
+        }
+        else if( y1 * yR < 0.0f ) // Right
+        {
+            sY = sign_of(y1);
+            lBound = borders[1];
+            rBound = xMaxCubic;
+        }
+        else
+        {
+            return 0; 
+        }
+        
+        // if there is one of solution in this range, the others can be found by deflation even if they are outside of this range.
+
+        float x = search_range(sY, lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
+        xs[0] = x;
+
+        float aPrime = a;
+        float bPrime = b + x * aPrime;
+        float cPrime = c + x * bPrime;
+        if( solve_quadratic(xs + 1, aPrime, bPrime, cPrime) ) // aPrime != 0.0f
+        {
+            return 3;
+        }
+        return 1;
     }
     else
     {
@@ -169,10 +174,11 @@ int solve_cubic( float xs[3], float xMinCubic, float xMaxCubic, int iterations, 
         {
             float lBound = xMinCubic;
             float rBound = xMaxCubic;
-            xs[nSolutions++] = search_range(sign_of(yL), lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
+            xs[0] = search_range(sign_of(yL), lBound, rBound, iterations, a, b, c, d, aD, bD, cD);
+            return 1;
         }
     }
-    return nSolutions;
+    return 0;
 }
 
 int main() {
