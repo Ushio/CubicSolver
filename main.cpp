@@ -59,6 +59,12 @@ float cubic(float x, float a, float b, float c, float d) {
 
 // High-Performance Polynomial Root Finding for Graphics
 
+// not using a * b < 0 to handle a or b is zero
+bool not_same_sign(float a, float b)
+{
+    return (0.0f <= a) != (0.0f <= b);
+}
+
 // f (x)= a x^3 + b x^2 + c x + d
 // f'(x)= aD x^2 + bD x + cD
 float search_range( float LSign, float lBound, float rBound, int iterations, float a, float b, float c, float d, float aD, float bD, float cD )
@@ -68,7 +74,7 @@ float search_range( float LSign, float lBound, float rBound, int iterations, flo
 
     for (int i = 0; i < iterations; i++)
     {
-        if( LSign * y < 0.0f )
+        if(not_same_sign(LSign, y))
         {
             rBound = x;
         }
@@ -132,19 +138,19 @@ int solve_cubic( float xs[3], float xMinCubic, float xMaxCubic, int iterations, 
         float lBound;
         float rBound;
 
-        if( yL * y0 < 0.0f ) // Left
+        if( not_same_sign( yL, y0 ) ) // Left
         {
             sY = sign_of(yL);
             lBound = xMinCubic;
             rBound = borders[0];
         }
-        else if( y0 * y1 < 0.0f ) // middle
+        else if( not_same_sign( y0, y1 ) ) // middle
         {
             sY = sign_of(y0);
             lBound = borders[0];
             rBound = borders[1];
         }
-        else if( y1 * yR < 0.0f ) // Right
+        else if( not_same_sign( y1, yR ) ) // Right
         {
             sY = sign_of(y1);
             lBound = borders[1];
@@ -173,7 +179,7 @@ int solve_cubic( float xs[3], float xMinCubic, float xMaxCubic, int iterations, 
     {
         float yL = cubic(xMinCubic, a, b, c, d);
         float yR = cubic(xMaxCubic, a, b, c, d);
-        if (yL * yR < 0.0f)
+        if (not_same_sign(yL, yR))
         {
             float lBound = xMinCubic;
             float rBound = xMaxCubic;
